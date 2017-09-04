@@ -1,4 +1,5 @@
 var wd = require("selenium-webdriver");
+var mysql = require('mysql');
 var d = new wd.Builder().forBrowser("chrome").build();
 d.get("https://translate.google.com/#en/ru/");
 
@@ -19,4 +20,24 @@ d.findElement(wd.By.css("#source")).then(function(elem){
         d.findElement(wd.By.xpath("//span[text() = 'name']")).getAttribute("innerHTML").then(function(profile) {
             console.log(profile);
     });
+});
+
+
+var con = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "",
+  database: "freek_word",
+});
+
+con.connect(function(err) {
+  if (err) throw err;
+  console.log("Connected!");
+});
+con.connect(function(err) {
+  //if (err) throw err;
+  con.query("SELECT * FROM main_words", function (err, result, fields) {
+    if (err) throw err;
+    console.log(result);
+  });
 });
