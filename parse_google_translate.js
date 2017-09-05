@@ -14,13 +14,7 @@ d.get("https://translate.google.com/#en/ru/");
         });
     });
 });*/
-d.findElement(wd.By.css("#source")).then(function(elem){
-        elem.sendKeys("name");
-        d.wait(wd.until.elementLocated({xpath : "//span[text() = 'name']"}));
-        d.findElement(wd.By.xpath("//span[text() = 'name']")).getAttribute("innerHTML").then(function(profile) {
-            console.log(profile);
-    });
-});
+
 
 
 var con = mysql.createConnection({
@@ -35,9 +29,36 @@ con.connect(function(err) {
   console.log("Connected!");
 });
 con.connect(function(err) {
+  /**/
+
   //if (err) throw err;
-  con.query("SELECT * FROM main_words", function (err, result, fields) {
+  selectQuery = "SELECT * FROM main_words LIMIT 10";
+  con.query(selectQuery, function (err, result, fields) {
     if (err) throw err;
-    console.log(result);
+    /*selenium - webdriver*/
+    result.map(function(row){
+      console.log(row.word);
+      (function(word){
+        d.wait(wd.until.elementLocated({css : "#source"}));
+        d.findElement(wd.By.css("#source")).then(function(elem){
+        elem.sendKeys(word);
+        d.wait(wd.until.elementLocated({xpath : "//span[text() = '"+word+"']"}));
+        d.findElement(wd.By.xpath("//span[text() = '"+word+"']")).getAttribute("innerHTML").then(function(profile) {
+        console.log(profile);
+        d.findElement(wd.By.css("#gt-lc > div.gt-cc > div.gt-cc-r")).
+        getAttribute("innerHTML").then(function(htmlDesc) {
+                          //console.log(htmlDesc);
+                  });
+                });
+            });
+          })(row.word);
+    });
+    /*selenium - webdriver*/
+  });
+
+  var updateQuery = "UPDATE main_words SET description = 'Canyon 123' WHERE id = 3192";
+  con.query(updateQuery, function (err, result) {
+    if (err) throw err;
+    console.log(result.affectedRows + " record(s) updated");
   });
 });
