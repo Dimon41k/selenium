@@ -32,15 +32,16 @@ con.connect(function(err) {
   /**/
 
   //if (err) throw err;
-  selectQuery = "SELECT * FROM main_words LIMIT 10";
+  selectQuery = "SELECT * FROM main_words WHERE description is null";
   con.query(selectQuery, function (err, result, fields) {
     if (err) throw err;
     /*selenium - webdriver*/
     result.map(function(row){
       console.log(row.word);
-      (function(word){
+      (function(word, id){
         d.wait(wd.until.elementLocated({css : "#source"}));
         d.findElement(wd.By.css("#source")).then(function(elem){
+        elem.clear();
         elem.sendKeys(word);
         d.wait(wd.until.elementLocated({xpath : "//span[text() = '"+word+"']"}));
         d.findElement(wd.By.xpath("//span[text() = '"+word+"']")).getAttribute("innerHTML").then(function(profile) {
@@ -48,17 +49,21 @@ con.connect(function(err) {
         d.findElement(wd.By.css("#gt-lc > div.gt-cc > div.gt-cc-r")).
         getAttribute("innerHTML").then(function(htmlDesc) {
                           //console.log(htmlDesc);
+                          var updateQuery = "UPDATE main_words SET description = '"+htmlDesc+"' WHERE id ="+id;
+                          con.query(updateQuery, function (err, result) {
+                            try{
+                              if (err) throw err;
+                              console.log(result.affectedRows + " record(s) updated");
+                            } catch(err){
+                              console.log("error trouble");
+                            }
+                          });
                   });
                 });
             });
-          })(row.word);
+          })(row.word, row.id);
     });
     /*selenium - webdriver*/
   });
 
-  var updateQuery = "UPDATE main_words SET description = 'Canyon 123' WHERE id = 3192";
-  con.query(updateQuery, function (err, result) {
-    if (err) throw err;
-    console.log(result.affectedRows + " record(s) updated");
-  });
 });
