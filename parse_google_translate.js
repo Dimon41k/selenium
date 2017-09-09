@@ -46,17 +46,16 @@ con.connect(function(err) {
         d.wait(wd.until.elementLocated({xpath : "//span[text() = '"+word+"']"}));
         d.findElement(wd.By.xpath("//span[text() = '"+word+"']")).getAttribute("innerHTML").then(function(profile) {
         console.log(profile);
+        d.wait(wd.until.elementLocated({css : ".gt-card-ttl-txt"}));
+        d.wait(wd.until.elementLocated({css : "#gt-lc > div.gt-cc > div.gt-cc-r"}));
         d.findElement(wd.By.css("#gt-lc > div.gt-cc > div.gt-cc-r")).
         getAttribute("innerHTML").then(function(htmlDesc) {
-                          //console.log(htmlDesc);
-                          var updateQuery = "UPDATE main_words SET description = '"+htmlDesc+"' WHERE id ="+id;
-                          con.query(updateQuery, function (err, result) {
-                            try{
+                          console.log(htmlDesc);
+                          var updateQuery = "UPDATE `main_words` SET `description` = ? WHERE `id` ="+id;
+                          con.query(updateQuery,[htmlDesc], function (err, result) {
                               if (err) throw err;
                               console.log(result.affectedRows + " record(s) updated");
-                            } catch(err){
-                              console.log("error trouble");
-                            }
+
                           });
                   });
                 });
