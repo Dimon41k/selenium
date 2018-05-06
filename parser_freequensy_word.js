@@ -1,28 +1,68 @@
-var wd = require("selenium-webdriver");
-var d = new wd.Builder().forBrowser("chrome").build();
-d.get("http://lingualeo.com/ru/jungle/the-oxford-3000-wordlist-132154#/page/1");
-function card(arrayIt)
-{
-  var cardArray = [];
-  var lengthHalfAr = Math.round(arrayIt.length / 2);
-  var bufArray = arrayIt.splice(0, lengthHalfAr);
-  bufArray.reverse();
-  var partAr;
-  while(partAr){
-    partAr = bufArray.shift();
-    cardArray.push(partAr);
-    cardArray.push(arrayIt.shift());
-  }
-  return cardArray;
-}
-  d.findElements(wd.By.css("#textContent context:nth-child(odd) tran:nth-child(1)")).then(function(elems){
-    card(elems).forEach(function (elem) {
-        elem.click();
-        d.wait(wd.until.elementLocated({css : "div.transword__show-full"}));
-        d.findElement(wd.By.css("div.transword__show-full")).click();
-        d.wait(wd.until.elementLocated({css : "div.transwidget.arrow-up.show-additional-info"}));
-        d.findElement(wd.By.css("body > div.transwidget.show-additional-info")).getAttribute("innerHTML").then(function(profile) {
-            //console.log(profile);
-        });
-    });
+var webdriver = require("selenium-webdriver");
+var tr = require("google-translate-api");
+var fs = require('fs');
+//var d = new wd.Builder().forBrowser("chrome").build();
+//d.get("http://lingualeo.com/ru/jungle/the-oxford-3000-wordlist-132154#/page/1");
+
+fs.readFile("./archive/word_list_with_audio_and_trans.js", "utf8", (err, data)=>{
+    data = JSON.parse(data);
+
+    translateWord(data);
+
+
+
+
 });
+
+
+async function translateWord(engWordArray){
+    let counter = 0;
+    var driver = new webdriver.Builder().forBrowser("chrome").build();
+    await driver.get('https://www.macmillandictionary.com/dictionary/british');
+    for(oneWord of engWordArray){
+        var element = await driver.findElement(webdriver.By.id('search_input'));
+        await element.sendKeys(oneWord.engWord);
+        await element.submit();
+        await driver.findElement(webdriver.By.id('search_submit')).submit();
+        var voice = await driver.findElements(webdriver.By.css('#headbar > span.PRONS > img'));
+        var transcription = await driver.findElements(webdriver.By.css('#headbar > span.PRONS > span.PRON.show_less'));
+        var senseDefinition = await driver.findElements(webdriver.By.css('.SENSE .DEFINITION'));
+        var senseExamples = await driver.findElements(webdriver.By.css('.SENSE .EXAMPLES'));
+        let dataObject = {};
+        if(voice[0])
+            dataObject.voiceUrl = await voice[0].getAttribute("data-src-mp3");
+        if(transcription[0])
+            dataObject.transcriptionText = await transcription[0].getAttribute("innerText");
+
+        var senseDefinitionsTextArray =  [];
+        var senseExamplesTextArray =  [];
+        for(x of senseDefinition){
+            let def = await x.getAttribute("innerText");
+            senseDefinitionsTextArray.push(def);
+        }
+
+        for(x of senseExamples){
+            let exemp = await x.getAttribute("innerText");
+            senseExamplesTextArray.push(exemp);
+        }
+        dataObject.senseDefinitionsTextArray = senseDefinitionsTextArray;
+        dataObject.senseExamplesTextArray = senseExamplesTextArray;
+        Object.assign(oneWord, dataObject);
+        console.log(oneWord, "counter: ", counter++);
+
+    }
+
+    fs.writeFile("./archive/word_list_with_audio.js", JSON.stringify(engWordArray), function(err) {
+        if(err) {
+            return console.log(err);
+        }
+        console.log("The file was saved!");
+    });
+
+
+}
+
+
+
+
+
