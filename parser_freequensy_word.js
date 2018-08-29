@@ -4,11 +4,24 @@ var fs = require('fs');
 //var d = new wd.Builder().forBrowser("chrome").build();
 //d.get("http://lingualeo.com/ru/jungle/the-oxford-3000-wordlist-132154#/page/1");
 
-fs.readFile("./archive/word_list_with_audio_and_trans.js", "utf8", (err, data)=>{
+fs.readFile("./archive/20k-oxf.js", "utf8", (err, data)=>{
     data = JSON.parse(data);
+    console.log(data.length);
+    fs.readFile('./archive/word_list_with_audio.js', 'utf8', (er, compData)=>{
+        compData = JSON.parse(compData);
+        var newData = data.map(x=>{
+            newElem = compData.find(findElem =>{
+                return findElem.engWord == x.engWord
+            })
+            if(newElem)return newElem;
+            else return x;
+        });
+        //fs.writeFile('./archive/20k-oxf.js', JSON.stringify(newData));
 
-    translateWord(data);
-
+    })
+    //translateWord(data);
+    //data = data.split('\n').reduce((a,x)=>{x=x.replace(' ', ''); return [...a, {engWord: x}];}, [])
+    //fs.writeFile('./archive/20k.js', JSON.stringify(data));
 
 
 
